@@ -1,0 +1,55 @@
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/auth/realms/hackathon-organizer
+        registration:
+          keycloak-client:
+            provider: keycloak
+            client-id: hackathon-organizer-client
+            client-secret: 0RSKBHpuEvfpvXkx5NKJclJRVGYlkf6J
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+  cloud:
+    gateway:
+      globalcors:
+        default-filters:
+          - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedHeaders: "*"
+            allowedMethods: "*"
+      routes:
+        - id: userWriteModule
+          uri: lb://user-write-service
+          predicates:
+            - Path=/api/v1/write/users/**
+            - Method=DELETE,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+        - id: userReadModule
+          uri: lb://user-read-service
+          predicates:
+            - Path=/api/v1/read/users/**
+            - Method=DELETE,GET,HEAD,OPTIONS,PATCH,PUT,TRACE
+        - id: hackathonWriteModule
+          uri: lb://hackathon-write-service
+          predicates:
+            - Path=/hackathon-websocket/**,/api/v1/write/teams/**,/api/v1/write/hackathons/**
+            - Method=DELETE,HEAD,OPTIONS,PATCH,POST,PUT,TRACE,GET
+        - id: hackathonReadModule
+          uri: lb://hackathon-read-service
+          predicates:
+            - Path=/api/v1/read/teams/**
+            - Method=DELETE,GET,HEAD,OPTIONS,PATCH,PUT,TRACE
+  application:
+    name: api-gateway
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://eureka:password@localhost:8761/eureka/
+server:
+  port: 9090
