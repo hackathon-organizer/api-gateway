@@ -41,7 +41,7 @@ spring:
         - id: hackathonReadModule
           uri: lb://hackathon-read-service
           predicates:
-            - Path=/api/v1/read/teams/**
+            - Path=/api/v1/read/teams/**, /api/v1/read/hackathons/**
             - Method=DELETE,GET,HEAD,OPTIONS,PATCH,PUT,TRACE
   application:
     name: api-gateway
