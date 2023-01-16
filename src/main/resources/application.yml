@@ -1,0 +1,60 @@
+spring:
+  config:
+    import: optional:configserver:http://localhost:8888/
+  cloud:
+    vault:
+      generic:
+        enabled: true
+        profile-separator: '/'
+        default-context: api-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${keycloak}
+    gateway:
+      default-filters:
+        - TokenRelay
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: ${origins}
+            allowedHeaders: "*"
+            allowedMethods: "*"
+      routes:
+        - id: userWriteModule
+          uri: lb://user-write-service
+          predicates:
+            - Path=/api/v1/write/users/**
+            - Method=DELETE,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+        - id: userReadModule
+          uri: lb://user-read-service
+          predicates:
+            - Path=/api/v1/read/users/**
+            - Method=GET,HEAD,OPTIONS,POST
+        - id: hackathonWriteModule
+          uri: lb://hackathon-write-service
+          predicates:
+            - Path=/hackathon-websocket/**,/api/v1/write/teams/**,/api/v1/write/hackathons/**
+            - Method=DELETE,HEAD,OPTIONS,PATCH,POST,PUT,TRACE,GET
+        - id: hackathonReadModule
+          uri: lb://hackathon-read-service
+          predicates:
+            - Path=/api/v1/read/teams/**, /api/v1/read/hackathons/**
+            - Method=GET,HEAD,OPTIONS,POST
+        - id: messagingModule
+          uri: lb:ws://messaging-service
+          predicates:
+            - Path=/messages-websocket/**, /api/v1/messages/**
+            - Method=HEAD,OPTIONS,PATCH,POST,PUT,TRACE,GET
+  application:
+    name: api-gateway
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://eureka:password@localhost:8761/eureka/
+server:
+  host: ${host}
+  port: 9090
